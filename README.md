@@ -1,6 +1,4 @@
-# Aplikasi Mitigasi Data COVID-19 Skala Micro
-
-(https://drive.google.com/file/d/18IEHWLPiY7--yVzNFjtF57LnLF9POne8/view?usp=sharing)
+# Aplikasi Mitigasi Data COVID-19 Skala Mikro
 
 ## LATAR BELAKANG
 Tantangan terbesar dalam menghadapi COVID-19 adalah kecepatan penyebarannya, sehingga upaya pencegahan merupakan pendekatan terbaik dalam menghadapinya. Guna menunjang upaya pencegahan yang sistematis dan terukur maka dibutuhkan pemetaan lingkungan yang baik sehingga dalam mengambil tindakan dapat efektif dan efisien. Untuk melakukan ini perlu adanya kesadaran dari kita semua tentang KETERBUKAAN informasi, mari kita membangun saling pengertian terhadap segala informasi yang menunjang upaya penangana COVID-19 dengan memberikan informasi yang jujur karena penderita/pdp/odp #BUKANAIB.
@@ -30,7 +28,7 @@ DOWNLOAD : https://codeload.github.com/fachrosi/mitigasicovid19micro/zip/master
 
 ### BASIS DATA : menggunakan Microsoft Excel
 1. Buka file excel yang terletak di direktori/folder htdocs dengan nama : datamitigasi.xlsx
-2. Isi data pada bagian : SHEET 1 dan SHEET 2 saja
+2. Isi data pada bagian : SHEET 1 (Profil Area) dan SHEET 2(Profil Keluarga/Rumah) saja
 3. Simpan
 
 ### MENJALANKAN APLIKASI
