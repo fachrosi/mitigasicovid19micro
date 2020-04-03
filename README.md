@@ -21,7 +21,7 @@ Aplikasi ini TIDAK membutuhkan instalasi khusus, TIDAK membutuhkan server khusus
 
 ## CARA MENJALANKAN
 ### DOWNLOAD
-1. Klik link berikut : https://codeload.github.com/fachrosi/mitigasidatacovid19/zip/master
+1. Klik link berikut : https://codeload.github.com/fachrosi/mitigasicovid19micro/zip/master
 2. Extract file .zip
 
 ### BASIS DATA : menggunakan Microsoft Excel
