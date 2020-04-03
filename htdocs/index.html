@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mitigasi COVID-19</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body>
+
+    <h1>MITIGASI DATA COVID-19 skala micro</h1>
+    <div class="filter">
+        <h3>STATUS :</h3>
+        <ul>
+            <li><input type="checkbox" name="MERAH" id="merah"  onchange="readExcel()" checked><label for="MERAH">MERAH (POSITIF)</label><br></li>
+            <li><input type="checkbox" name="KUNING" id="kuning"  onchange="readExcel()" checked><label for="KUNING">KUNING (PDP/ODP)</label><br></li>
+            <li><input type="checkbox" name="HIJAU" id="hijau"  onchange="readExcel()" checked><label for="HIJAU">HIJAU</label><br></li>
+        </ul>
+    </div>
+
+    <div class="filter">
+        <h3>KERENTANAN KESEHATAN:</h3>
+        <ul>
+            <li><input type="checkbox" name="YA" id="ya"  onchange="readExcel()" checked><label for="YA">YA/RENTAN</label><br></li>
+            <li><input type="checkbox" name="TIDAK" id="tidak"  onchange="readExcel()" checked><label for="TIDAK">TIDAK</label><br></li>
+        </ul>
+    </div>
+    <div class="filter">
+        <h3>POTENSI TERTULAR/MENULARKAN :</h3>
+        <ul>
+            <li><input type="checkbox" name="TINGGI" id="tinggi"  onchange="readExcel()" checked><label for="TINGGI">TINGGI</label><br></li>
+            <li><input type="checkbox" name="SEDANG" id="sedang"  onchange="readExcel()" checked><label for="SEDANG">SEDANG</label><br></li>
+            <li><input type="checkbox" name="RENDAH" id="rendah"  onchange="readExcel()" checked><label for="RENDAH">RENDAH</label><br></li>
+        </ul>
+    </div>
+    <div class="filter">
+        <h3>JUMLAH KELUARGA :</h3>
+        <ul>
+            <li id="jumlah_data"></li>
+        </ul>
+    </div>
+
+    <div id="map"></div>
+    <div id="popup"></div>
+
+    <h2>GRAFIK</h2>
+    <div>
+        <div id="chart1" class="chart">
+            <a href="#" onclick="readExcelChart()">Klik di sini jika tidak muncul</a>
+        </div>
+        <div id="chart2" class="chart">
+            <a href="#" onclick="readExcelChart()">Klik di sini jika tidak muncul</a>
+        </div>
+        <div id="chart3" class="chart">
+            <a href="#" onclick="readExcelChart()">Klik di sini jika tidak muncul</a>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    var map_ = null;
+    var lintang = -7.2446653;
+    var bujur = 112.7553423
+    var sourceVector = new ol.source.Vector();
+    var popup = null;
+    var element =  null;
+
+    $(document).ready(function(){
+        element = document.getElementById('popup');
+        initArea();
+        initMaps();
+        //readExcel();
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(readExcelChart());
+
+        map_.on('click', function(evt) {
+            var feature = map_.forEachFeatureAtPixel(evt.pixel,
+                function(feature) {
+                    return feature;
+            });
+            if (feature) {
+                var coordinates = feature.getGeometry().getCoordinates();
+                popup.setPosition(coordinates);
+                var potensiClass = feature.get('potensi')=='TINGGI'?'merah':(feature.get('potensi')=='RENDAH'?'hijau':'kuning');
+                var rentanClass = feature.get('rentan')=='YA'?'merah':'hijau';
+                element.innerHTML = '<div class="popup"><strong>'+feature.get('name')+'</strong><hr /><br />POTENSI : <span class="'+potensiClass+'">'+feature.get('potensi')+'</span> <br />RENTAN : <span class="'+rentanClass+'">'+feature.get('rentan')+'</span></div>';
+            } else {
+                element.innerHTML = '';
+            }
+        });
+
+    });
+
+    function initArea(){
+        var url = "./datamitigasi.xlsx";
+        var req = new XMLHttpRequest();
+        req.open("GET", url, true);
+        req.responseType = "arraybuffer";
+
+        req.onload = function(e) {
+          var data = new Uint8Array(req.response);
+          var workbook = XLSX.read(data, {type:"array"});
+
+          var data_sheet_name = workbook.SheetNames[5];
+          var data_worksheet = workbook.Sheets[data_sheet_name];
+          var data = XLSX.utils.sheet_to_json(data_worksheet);
+
+          //SETTING PUSAT PETA
+          lintang = data[0].LINTANG!=0?data[0].LINTANG:-7.2446653;
+          bujur = data[0].BUJUR!=0?data[0].BUJUR:112.7553423;
+          map_.getView().setCenter(ol.proj.transform([parseFloat(bujur), parseFloat(lintang)], 'EPSG:4326', 'EPSG:3857'));
+          //initMaps();
+        }
+        req.send();
+    }
+
+    function initMaps(){
+        map_ = new ol.Map({
+            target  : 'map',
+            layers  : [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            view    : new ol.View({
+                center  : ol.proj.transform([bujur, lintang], 'EPSG:4326', 'EPSG:3857'),
+                zoom    : 13
+            })
+        });
+
+        popup = new ol.Overlay({
+            element     : element,
+            positioning : 'bottom-center',
+            stopEvent   : false,
+            offset      : [0, -50]
+        });
+        map_.addOverlay(popup);
+
+        readExcel();
+    }
+
+    function readExcel(){
+        var url = "./datamitigasi.xlsx";
+        var req = new XMLHttpRequest();
+        req.open("GET", url, true);
+        req.responseType = "arraybuffer";
+
+        req.onload = function(e) {
+          var data = new Uint8Array(req.response);
+          var workbook = XLSX.read(data, {type:"array"});
+
+          var data_sheet_name = workbook.SheetNames[3];
+          var data_worksheet = workbook.Sheets[data_sheet_name];
+          var data_ = XLSX.utils.sheet_to_json(data_worksheet);
+          //console.log(data);
+          loadMapsData(data_);
+        }
+        req.send();
+    }//readExcel
+
+    function loadMapsData(data){
+
+        var redMarker = new ol.style.Style({
+            image   : new ol.style.Icon({
+                src     : 'http://maps.google.com/mapfiles/ms/icons/red.png',
+                anchor  : [.3, .3]
+            })
+        });
+
+        var yellowMarker = new ol.style.Style({
+            image   : new ol.style.Icon({
+                src     : 'http://maps.google.com/mapfiles/ms/icons/yellow.png',
+                anchor  : [.3, .3]
+            })
+        });
+
+        var greenMarker = new ol.style.Style({
+            image   : new ol.style.Icon({
+                src     : 'http://maps.google.com/mapfiles/ms/icons/green.png',
+                anchor  : [.3, .3]
+            })
+        });
+
+
+        sourceVector.clear()
+        var jumlah_data = 0;
+
+        for(var a=0;a<data.length;a++){
+            if(data[a].LINTANG!=0 && data[a].BUJUR!=0){
+                if( ( (data[a].STATUS=='MERAH' &&  $('#merah').prop('checked')) || (data[a].STATUS=='KUNING' &&  $('#kuning').prop('checked')) || (data[a].STATUS=='HIJAU' &&  $('#hijau').prop('checked')) ) &&
+                    ( (data[a].RENTAN=='YA' &&  $('#ya').prop('checked')) || (data[a].RENTAN=='TIDAK' &&  $('#tidak').prop('checked')) ) &&
+                    ( (data[a].POTENSI=='TINGGI' &&  $('#tinggi').prop('checked')) || (data[a].POTENSI=='SEDANG' &&  $('#sedang').prop('checked')) || (data[a].POTENSI=='RENDAH' &&  $('#rendah').prop('checked')) )
+                ){
+
+                    if(data[a].STATUS=='MERAH'){
+                        var iconMarker = redMarker;
+                    }else if (data[a].STATUS=='KUNING') {
+                        var iconMarker = yellowMarker;
+                    }else{
+                        var iconMarker = greenMarker;
+                    }
+
+                    var lin = parseFloat(data[a].LINTANG);
+                    var buj = parseFloat(data[a].BUJUR);
+
+                    var marker = new ol.Feature({
+                        geometry    : new ol.geom.Point(ol.proj.transform([buj, lin], 'EPSG:4326', 'EPSG:3857')),
+                        name        : data[a].KODE,
+                        status      : data[a].STATUS,
+                        potensi     : data[a].POTENSI,
+                        rentan      : data[a].RENTAN
+                    });
+                    marker.setStyle(iconMarker);
+
+                    sourceVector.addFeatures([marker]);
+
+                    var layer = new ol.layer.Vector({
+                        source: sourceVector
+                    });
+
+                    map_.addLayer(layer);
+
+                    jumlah_data++;
+                }
+            }//if
+        }//for
+
+        $('#jumlah_data').html(jumlah_data + ' Keluarga');
+
+    }
+
+    function readExcelChart(){
+        var url = "datamitigasi.xlsx";
+        var req = new XMLHttpRequest();
+        req.open("GET", url, true);
+        req.responseType = "arraybuffer";
+
+        req.onload = function(e) {
+          var data = new Uint8Array(req.response);
+          var workbook = XLSX.read(data, {type:"array"});
+
+          var chart_sheet_name = workbook.SheetNames[4];
+          var chart_worksheet = workbook.Sheets[chart_sheet_name];
+          var chart_data = XLSX.utils.sheet_to_json(chart_worksheet);
+          loadChart(chart_data)
+
+        }
+
+        req.send();
+    }
+
+    function loadChart(data){
+        //CHART STATUS
+        var options1 = {
+            width                       : 400,
+            height                      : 400,
+            title                       : 'STATUS',
+            colors	     	            : ['#FF2525','#FFA100', '#588E1B'],
+            legend                      : { position: 'bottom' },
+            pieSliceText                : 'value',
+            sliceVisibilityThreshold    :0
+        };
+
+        var dataStatus1 = [
+            ['Kategori', 'Keluarga'],
+            ['MERAH (POSTIF)', data[0].MERAH],
+            ['KUNING (PDP/ODP)', data[0].KUNING],
+            ['HIJAU', data[0].HIJAU]
+        ];
+        console.log(dataStatus1);
+
+        var data1_ = google.visualization.arrayToDataTable(dataStatus1);
+        var chart1 = new google.visualization.PieChart(document.getElementById('chart1'));
+        chart1.draw(data1_, options1);
+
+        //CHART KERENTANAN
+        var options2 = {
+            width                       : 400,
+            height                      : 400,
+            title                       : 'KERENTANAN KESEHATAN',
+            colors	     	            : ['#FF2525', '#588E1B'],
+            legend                      : { position: 'bottom' },
+            pieSliceText                : 'value',
+            sliceVisibilityThreshold    :0
+        };
+
+        var dataStatus2 = [
+            ['Kategori', 'Keluarga'],
+            ['YA/RENTAN', data[0].YA],
+            ['TIDAK', data[0].TIDAK]
+        ];
+        console.log(dataStatus2);
+
+        var data2_ = google.visualization.arrayToDataTable(dataStatus2);
+        var chart2 = new google.visualization.PieChart(document.getElementById('chart2'));
+        chart2.draw(data2_, options2);
+
+        //CHART POTENSI TERTULAR/MENULARKAN
+        var options3 = {
+            width                       : 400,
+            height                      : 400,
+            title                       : 'POTENSI TERTULAR/MENULARKAN',
+            colors	     	            : ['#FF2525','#FFA100', '#588E1B'],
+            legend                      : { position: 'bottom' },
+            pieSliceText                : 'value',
+            sliceVisibilityThreshold    :0
+        };
+
+        var dataStatus3 = [
+            ['Kategori', 'Keluarga'],
+            ['TINGGI', data[0].TINGGI],
+            ['SEDANG', data[0].SEDANG],
+            ['RENDAH', data[0].RENDAH]
+        ];
+        console.log(dataStatus3);
+
+        var data3_ = google.visualization.arrayToDataTable(dataStatus3);
+        var chart3 = new google.visualization.PieChart(document.getElementById('chart3'));
+        chart3.draw(data3_, options3);
+
+    }//loadChart
+
+
+
+</script>
+
+<style>
+    #map {
+        height: 70%;
+        clear: both;
+    }
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1{
+        text-align: center;
+    }
+
+    h2{
+        text-align: center;
+    }
+
+    h3{
+        padding: 0px;
+        margin: 0px;
+    }
+
+    ul{
+        padding-top: 0px;
+        padding-left: 20px;
+    }
+
+    .filter{
+        float: left;
+        margin-left: 20px;
+        margin-right: 50px;
+
+    }
+
+    .chart {
+        float: left;
+        width: 30%;
+        text-align: center;
+    }
+
+    .popup{
+        background-color: #FFFFFF;
+        border: 1px solid #000000;
+        padding: 10px;
+    }
+
+    .merah{
+        background-color:#FF2525;
+        color: #FFFFFF;
+        padding: 3px;
+    }
+
+    .kuning{
+        background-color:#FFA100;
+        color: #FFFFFF;
+        padding: 3px;
+    }
+
+    .hijau{
+        background-color:#588E1B;
+        color: #FFFFFF;
+        padding: 3px;
+    }
+</style>
