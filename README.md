@@ -1,5 +1,7 @@
 # Aplikasi Mitigasi Data COVID-19 Skala Mikro
 
+![](screenshoot.png)
+
 ## LATAR BELAKANG
 Tantangan terbesar dalam menghadapi COVID-19 adalah kecepatan penyebarannya, sehingga upaya pencegahan merupakan pendekatan terbaik dalam menghadapinya. Guna menunjang upaya pencegahan yang sistematis dan terukur maka dibutuhkan pemetaan lingkungan yang baik sehingga dalam mengambil tindakan dapat efektif dan efisien. Untuk melakukan ini perlu adanya kesadaran dari kita semua tentang KETERBUKAAN informasi, mari kita membangun saling pengertian terhadap segala informasi yang menunjang upaya penangana COVID-19 dengan memberikan informasi yang jujur karena penderita/pdp/odp #BUKANAIB.
 
