@@ -14,25 +14,25 @@
     <div class="filter">
         <h3>STATUS :</h3>
         <ul>
-            <li><input type="checkbox" name="MERAH" id="merah"  onchange="readExcel()" checked><label for="MERAH">MERAH (POSITIF)</label><br></li>
-            <li><input type="checkbox" name="KUNING" id="kuning"  onchange="readExcel()" checked><label for="KUNING">KUNING (PDP/ODP)</label><br></li>
-            <li><input type="checkbox" name="HIJAU" id="hijau"  onchange="readExcel()" checked><label for="HIJAU">HIJAU</label><br></li>
+            <li><input type="checkbox" name="MERAH" id="merah"  onchange="loadMapsData()" checked><label for="MERAH">MERAH (POSITIF)</label><br></li>
+            <li><input type="checkbox" name="KUNING" id="kuning"  onchange="loadMapsData()" checked><label for="KUNING">KUNING (PDP/ODP)</label><br></li>
+            <li><input type="checkbox" name="HIJAU" id="hijau"  onchange="loadMapsData()" checked><label for="HIJAU">HIJAU</label><br></li>
         </ul>
     </div>
 
     <div class="filter">
         <h3>KERENTANAN KESEHATAN:</h3>
         <ul>
-            <li><input type="checkbox" name="YA" id="ya"  onchange="readExcel()" checked><label for="YA">YA/RENTAN</label><br></li>
-            <li><input type="checkbox" name="TIDAK" id="tidak"  onchange="readExcel()" checked><label for="TIDAK">TIDAK</label><br></li>
+            <li><input type="checkbox" name="YA" id="ya"  onchange="loadMapsData()" checked><label for="YA">YA/RENTAN</label><br></li>
+            <li><input type="checkbox" name="TIDAK" id="tidak"  onchange="loadMapsData()" checked><label for="TIDAK">TIDAK</label><br></li>
         </ul>
     </div>
     <div class="filter">
         <h3>POTENSI TERTULAR/MENULARKAN :</h3>
         <ul>
-            <li><input type="checkbox" name="TINGGI" id="tinggi"  onchange="readExcel()" checked><label for="TINGGI">TINGGI</label><br></li>
-            <li><input type="checkbox" name="SEDANG" id="sedang"  onchange="readExcel()" checked><label for="SEDANG">SEDANG</label><br></li>
-            <li><input type="checkbox" name="RENDAH" id="rendah"  onchange="readExcel()" checked><label for="RENDAH">RENDAH</label><br></li>
+            <li><input type="checkbox" name="TINGGI" id="tinggi"  onchange="loadMapsData()" checked><label for="TINGGI">TINGGI</label><br></li>
+            <li><input type="checkbox" name="SEDANG" id="sedang"  onchange="loadMapsData()" checked><label for="SEDANG">SEDANG</label><br></li>
+            <li><input type="checkbox" name="RENDAH" id="rendah"  onchange="loadMapsData()" checked><label for="RENDAH">RENDAH</label><br></li>
         </ul>
     </div>
     <div class="filter">
@@ -48,13 +48,13 @@
     <h2>GRAFIK</h2>
     <div>
         <div id="chart1" class="chart">
-            <a href="#" onclick="readExcelChart()">Klik di sini jika tidak muncul</a>
+            <a href="#" onclick="loadChart()">Klik di sini jika tidak muncul</a>
         </div>
         <div id="chart2" class="chart">
-            <a href="#" onclick="readExcelChart()">Klik di sini jika tidak muncul</a>
+            <a href="#" onclick="loadChart()">Klik di sini jika tidak muncul</a>
         </div>
         <div id="chart3" class="chart">
-            <a href="#" onclick="readExcelChart()">Klik di sini jika tidak muncul</a>
+            <a href="#" onclick="loadChart()">Klik di sini jika tidak muncul</a>
         </div>
     </div>
 </body>
@@ -67,14 +67,17 @@
     var sourceVector = new ol.source.Vector();
     var popup = null;
     var element =  null;
+    var datalist = null;
+    var dataArea = null;
+    var dataAnalisa = null;
 
     $(document).ready(function(){
         element = document.getElementById('popup');
-        initArea();
         initMaps();
-        //readExcel();
+        initData();
+
         google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(readExcelChart());
+        //google.charts.setOnLoadCallback(readExcelChart());
 
         map_.on('click', function(evt) {
             var feature = map_.forEachFeatureAtPixel(evt.pixel,
@@ -94,7 +97,7 @@
 
     });
 
-    function initArea(){
+    function initData(){
         var url = "./datamitigasi.xlsx";
         var req = new XMLHttpRequest();
         req.open("GET", url, true);
@@ -104,20 +107,32 @@
           var data = new Uint8Array(req.response);
           var workbook = XLSX.read(data, {type:"array"});
 
-          var data_sheet_name = workbook.SheetNames[5];
-          var data_worksheet = workbook.Sheets[data_sheet_name];
-          var data = XLSX.utils.sheet_to_json(data_worksheet);
+          var data_data = workbook.SheetNames[3];
+          var data_worksheet = workbook.Sheets[data_data];
+          datalist = XLSX.utils.sheet_to_json(data_worksheet);
+
+          var analisa_data = workbook.SheetNames[4];
+          var analisa_worksheet = workbook.Sheets[analisa_data];
+          dataAnalisa = XLSX.utils.sheet_to_json(analisa_worksheet);
+
+          var area_data = workbook.SheetNames[5];
+          var area_worksheet = workbook.Sheets[area_data];
+          dataArea = XLSX.utils.sheet_to_json(area_worksheet);
 
           //SETTING PUSAT PETA
-          lintang = data[0].LINTANG!=0?data[0].LINTANG:-7.2446653;
-          bujur = data[0].BUJUR!=0?data[0].BUJUR:112.7553423;
-          map_.getView().setCenter(ol.proj.transform([parseFloat(bujur), parseFloat(lintang)], 'EPSG:4326', 'EPSG:3857'));
+          lintang = parseFloat(dataArea[0].LINTANG)!=0?parseFloat(dataArea[0].LINTANG):-7.2446653;
+          bujur = parseFloat(dataArea[0].BUJUR)!=0?parseFloat(dataArea[0].BUJUR):112.7553423;
+          map_.getView().setCenter(ol.proj.transform([bujur,lintang], 'EPSG:4326', 'EPSG:3857'));
+
           //initMaps();
+          loadMapsData();
+          loadChart();
         }
         req.send();
     }
 
     function initMaps(){
+        console.log('initMaps : ' + lintang + ' , ' + bujur)
         map_ = new ol.Map({
             target  : 'map',
             layers  : [
@@ -127,9 +142,10 @@
             ],
             view    : new ol.View({
                 center  : ol.proj.transform([bujur, lintang], 'EPSG:4326', 'EPSG:3857'),
-                zoom    : 13
+                zoom    : 15
             })
         });
+
 
         popup = new ol.Overlay({
             element     : element,
@@ -139,29 +155,9 @@
         });
         map_.addOverlay(popup);
 
-        readExcel();
     }
 
-    function readExcel(){
-        var url = "./datamitigasi.xlsx";
-        var req = new XMLHttpRequest();
-        req.open("GET", url, true);
-        req.responseType = "arraybuffer";
-
-        req.onload = function(e) {
-          var data = new Uint8Array(req.response);
-          var workbook = XLSX.read(data, {type:"array"});
-
-          var data_sheet_name = workbook.SheetNames[3];
-          var data_worksheet = workbook.Sheets[data_sheet_name];
-          var data_ = XLSX.utils.sheet_to_json(data_worksheet);
-          //console.log(data);
-          loadMapsData(data_);
-        }
-        req.send();
-    }//readExcel
-
-    function loadMapsData(data){
+    function loadMapsData(){
 
         var redMarker = new ol.style.Style({
             image   : new ol.style.Icon({
@@ -184,9 +180,12 @@
             })
         });
 
-
+        var data = datalist;
         sourceVector.clear()
         var jumlah_data = 0;
+        var date1 = new Date();
+        var start = date1.getTime();
+        console.log('start' + start);
 
         for(var a=0;a<data.length;a++){
             if(data[a].LINTANG!=0 && data[a].BUJUR!=0){
@@ -227,32 +226,16 @@
                 }
             }//if
         }//for
-
         $('#jumlah_data').html(jumlah_data + ' Keluarga');
 
+        var date2 = new Date();
+        var finish = date2.getTime();
+        console.log('finish' + finish);
+
     }
 
-    function readExcelChart(){
-        var url = "datamitigasi.xlsx";
-        var req = new XMLHttpRequest();
-        req.open("GET", url, true);
-        req.responseType = "arraybuffer";
-
-        req.onload = function(e) {
-          var data = new Uint8Array(req.response);
-          var workbook = XLSX.read(data, {type:"array"});
-
-          var chart_sheet_name = workbook.SheetNames[4];
-          var chart_worksheet = workbook.Sheets[chart_sheet_name];
-          var chart_data = XLSX.utils.sheet_to_json(chart_worksheet);
-          loadChart(chart_data)
-
-        }
-
-        req.send();
-    }
-
-    function loadChart(data){
+    function loadChart(){
+        var data = dataAnalisa;
         //CHART STATUS
         var options1 = {
             width                       : 400,
@@ -270,7 +253,7 @@
             ['KUNING (PDP/ODP)', data[0].KUNING],
             ['HIJAU', data[0].HIJAU]
         ];
-        console.log(dataStatus1);
+        //console.log(dataStatus1);
 
         var data1_ = google.visualization.arrayToDataTable(dataStatus1);
         var chart1 = new google.visualization.PieChart(document.getElementById('chart1'));
@@ -292,7 +275,7 @@
             ['YA/RENTAN', data[0].YA],
             ['TIDAK', data[0].TIDAK]
         ];
-        console.log(dataStatus2);
+        //console.log(dataStatus2);
 
         var data2_ = google.visualization.arrayToDataTable(dataStatus2);
         var chart2 = new google.visualization.PieChart(document.getElementById('chart2'));
@@ -315,14 +298,13 @@
             ['SEDANG', data[0].SEDANG],
             ['RENDAH', data[0].RENDAH]
         ];
-        console.log(dataStatus3);
+        //console.log(dataStatus3);
 
         var data3_ = google.visualization.arrayToDataTable(dataStatus3);
         var chart3 = new google.visualization.PieChart(document.getElementById('chart3'));
         chart3.draw(data3_, options3);
 
     }//loadChart
-
 
 
 </script>
