@@ -38,3 +38,16 @@ DOWNLOAD : https://codeload.github.com/fachrosi/mitigasicovid19micro/zip/master
 2. Buka Browser : Chrome/Firefox/Edge/Opera dan pastikan memiliki jaringan internet
 3. Klik 2x file start.html, Jika belum berjalan masukkan alamat pada browser : http://localhost:8000
 4. Aplikasi sudah berjalan
+
+### VIDEO TUTORIAL
+1. Mitigasi Covid-19 : Petakan, Rencanakan dan lakukan
+Klik :  https://youtu.be/jsXVSttMJxs
+
+2. Petunjuk Cara Membaca/Menganalisa Aplikasi Mitigasi Covid-19
+Klik : https://youtu.be/r-4u3KuC4is
+
+3. Cara Mengisi Database (Excel) Aplikasi Mitigasi Covid-19
+Klik : https://youtu.be/tgRox9mKCk4
+
+4. Cara Menjalankan/Memulai Aplikasi Mitigasi Covid-19.
+Klik : https://youtu.be/_kLEcJUDjXI
